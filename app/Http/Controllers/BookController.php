@@ -18,10 +18,15 @@ class BookController extends Controller
         $this->googleBooksService = $googleBooksService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $page = $request->query('page', 1);
+        $limit = $request->query('limit', 10);
+
         // Paginar todos os livros
-        $books = Book::paginate(10); // Paginação com 10 itens por página
+        $books = Books::paginate($page, ['*'], 'page', $page);
+        
+        //$books = Book::paginate(10); // Paginação com 10 itens por página
         return response()->json($books);
     }
     
