@@ -9,20 +9,13 @@ class Author extends Model
 {
     use HasFactory;
 
+    // Campos atribuíveis em massa
     protected $fillable = [
         'name',
         'street_address',
         'city',
         'state',
         'country',
-        'picture_url'
+        'picture_url',
     ];
-
-    /**
-     * Relacionamento: Um autor pode ter muitos livros.
-     */
-    public function books()
-    {
-        return $this->hasMany(Book::class);
-    }
 }

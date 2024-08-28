@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,8 +28,13 @@ Route::get('/books/search', [BookController::class, 'searchBooks']); // Pesquisa
 Route::get('/books/{id}/download', [BookController::class, 'download']); // Baixar um livro específico por ID
 
 // Rotas autenticadas para autores
+Route::middleware('auth:sanctum')->post('/authors', [AuthorController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/books', [BookController::class, 'store']); // Criar um novo livro
-    Route::put('/books/{id}', [BookController::class, 'update']); // Atualizar um livro por ID
-    Route::delete('/books/{id}', [BookController::class, 'destroy']); // Deletar um livro por ID
+Route::post('/books', [BookController::class, 'store']); // Criar um novo livro
+Route::put('/books/{id}', [BookController::class, 'update']); // Atualizar um livro por ID
+Route::delete('/books/{id}', [BookController::class, 'destroy']); // Deletar um livro por ID
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+
 });
