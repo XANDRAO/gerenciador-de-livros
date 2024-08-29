@@ -32,102 +32,110 @@ class BookController extends Controller
     
     public function show($id)
     {
-        // Buscar livro específico por ID ou ISBN
-        $book = Book::where('id', $id)->orWhere('isbn_number', $id)->firstOrFail();
+        $book = Book::where('id', $id)->orWhere('isbn_number', $id)->first();
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
         return response()->json($book);
     }
-    
+
     public function searchBooks(Request $request)
     {
         $query = $request->input('query');
-    
-        // Pesquisar livro por nome ou nome do autor
-        $books = Book::where('title', 'like', '%' . $query . '%')
-                     ->orWhereHas('author', function ($q) use ($query) {
-                         $q->where('name', 'like', '%' . $query . '%');
-                     })
-                     ->get();
-    
+        $books = $this->googleBooksService->searchBooks($query);
         return response()->json($books);
     }
-    
+
     public function download($id)
     {
-        // Baixar um livro específico por ID
-        $book = Book::where('id', $id)->orWhere('isbn_number', $id)->firstOrFail();
-    
-        if ($book->file_url && Storage::exists($book->file_url)) {
-            return response()->download(storage_path('app/' . $book->file_url));
+        $book = Book::find($id);
+        if (!$book || !$book->file_url) {
+            return response()->json(['error' => 'File not found'], 404);
         }
-    
-        return response()->json(['error' => 'File not found.'], 404);
+        return response()->download(storage_path('app/' . $book->file_url));
     }
-    
+
     public function store(Request $request)
     {
-        // Validar campos
-        $validatedData = $request->validate([
-            'title' => 'required|string',
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
             'author_id' => 'required|exists:authors,id',
-            'publication_year' => 'required|integer',
+            'publisher' => 'required|string|max:255',
+            'publication_year' => 'required|date_format:Y',
+            'pages_amount' => 'required|integer',
             'isbn_number' => 'required|string|unique:books,isbn_number',
-            'file' => 'required|file|mimes:pdf',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif'
+            'file' => 'nullable|file|mimes:pdf|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-    
-        // Fazer upload de fotos e livros.pdf
-        $filePath = $request->file('file')->store('books');
-        $imagePath = $request->file('image') ? $request->file('image')->store('images') : null;
-    
-        $book = Book::create(array_merge($validatedData, [
-            'file_url' => $filePath,
-            'image_name' => $imagePath
-        ]));
-    
+
+        $book = new Book();
+        $book->title = $validated['title'];
+        $book->author_id = $validated['author_id'];
+        $book->publisher = $validated['publisher'];
+        $book->publication_year = $validated['publication_year'];
+        $book->pages_amount = $validated['pages_amount'];
+        $book->isbn_number = $validated['isbn_number'];
+
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('books');
+            $book->file_url = $filePath;
+        }
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images');
+            $book->image_name = $imagePath;
+        }
+
+        $book->save();
         return response()->json($book, 201);
     }
-    
+
     public function update(Request $request, $id)
     {
-        // Atualizar campos com validação
-        $book = Book::findOrFail($id);
-    
-        $validatedData = $request->validate([
-            'title' => 'sometimes|required|string',
+        $book = Book::find($id);
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
             'author_id' => 'sometimes|required|exists:authors,id',
-            'publication_year' => 'sometimes|required|integer',
+            'publisher' => 'sometimes|required|string|max:255',
+            'publication_year' => 'sometimes|required|date_format:Y',
+            'pages_amount' => 'sometimes|required|integer',
             'isbn_number' => 'sometimes|required|string|unique:books,isbn_number,' . $id,
-            'file' => 'nullable|file|mimes:pdf',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif'
+            'file' => 'nullable|file|mimes:pdf|max:20480',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-    
+
+        $book->update($validated);
+
         if ($request->hasFile('file')) {
-            // Atualizar arquivo PDF
             Storage::delete($book->file_url);
-            $validatedData['file_url'] = $request->file('file')->store('books');
+            $filePath = $request->file('file')->store('books');
+            $book->file_url = $filePath;
         }
-    
+
         if ($request->hasFile('image')) {
-            // Atualizar imagem
             Storage::delete($book->image_name);
-            $validatedData['image_name'] = $request->file('image')->store('images');
+            $imagePath = $request->file('image')->store('images');
+            $book->image_name = $imagePath;
         }
-    
-        $book->update($validatedData);
-    
+
+        $book->save();
         return response()->json($book);
     }
-    
+
     public function destroy($id)
     {
-        // Deletar livro por ID ou ISBN
-        $book = Book::where('id', $id)->orWhere('isbn_number', $id)->firstOrFail();
-        
+        $book = Book::find($id);
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
+
         Storage::delete($book->file_url);
         Storage::delete($book->image_name);
-        
         $book->delete();
-    
-        return response()->json(['message' => 'Book deleted successfully.']);
-    } 
-}  
+        return response()->json(['message' => 'Book deleted successfully']);
+    }
+}
