@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Author;
-use App\Services\GoogleBooksService;
+use App\Http\Services\GoogleBooksService;
+use App\Http\Services\BrasilAPIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
     private $googleBooksService;
+    private $brasilAPIService;
 
-    public function __construct(GoogleBooksService $googleBooksService)
+    public function __construct(GoogleBooksService $googleBooksService, BrasilAPIService $brasilAPIService)
     {
         $this->googleBooksService = $googleBooksService;
+        $this->brasilAPIService = $brasilAPIService;
     }
 
     public function index(Request $request)
@@ -24,9 +26,8 @@ class BookController extends Controller
         $limit = $request->query('limit', 10);
 
         // Paginar todos os livros
-        $books = Books::paginate($page, ['*'], 'page', $page);
+        $books = Book::paginate($limit, ['*'], 'page', $page);
         
-        //$books = Book::paginate(10); // Paginação com 10 itens por página
         return response()->json($books);
     }
     
@@ -66,7 +67,15 @@ class BookController extends Controller
             'isbn_number' => 'required|string|unique:books,isbn_number',
             'file' => 'nullable|file|mimes:pdf|max:20480',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'cep' => 'required|string|max:9',
         ]);
+
+        // Buscar endereço usando BrasilAPI
+        $address = $this->brasilAPIService->getAddressByCep($validated['cep']);
+        
+        if (!$address) {
+            return response()->json(['error' => 'Invalid CEP or unable to fetch address'], 400);
+        }
 
         $book = new Book();
         $book->title = $validated['title'];
@@ -75,6 +84,10 @@ class BookController extends Controller
         $book->publication_year = $validated['publication_year'];
         $book->pages_amount = $validated['pages_amount'];
         $book->isbn_number = $validated['isbn_number'];
+        $book->city = $address['city'] ?? null;
+        $book->state = $address['state'] ?? null;
+        $book->neighborhood = $address['neighborhood'] ?? null;
+        $book->street = $address['street'] ?? null;
 
         if ($request->hasFile('file')) {
             $filePath = $request->file('file')->store('books');
@@ -82,8 +95,12 @@ class BookController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images');
+            // Fazer o upload da imagem para o S3
+            $imagePath = $request->file('image')->store('images', 's3');
             $book->image_name = $imagePath;
+
+            // Obter a URL pública da imagem
+            $book->image_url = Storage::disk('s3')->url($imagePath);
         }
 
         $book->save();
@@ -106,7 +123,20 @@ class BookController extends Controller
             'isbn_number' => 'sometimes|required|string|unique:books,isbn_number,' . $id,
             'file' => 'nullable|file|mimes:pdf|max:20480',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'cep' => 'sometimes|required|string|max:9',
         ]);
+
+        if (isset($validated['cep'])) {
+            $address = $this->brasilAPIService->getAddressByCep($validated['cep']);
+            if ($address) {
+                $book->city = $address['city'] ?? null;
+                $book->state = $address['state'] ?? null;
+                $book->neighborhood = $address['neighborhood'] ?? null;
+                $book->street = $address['street'] ?? null;
+            } else {
+                return response()->json(['error' => 'Invalid CEP or unable to fetch address'], 400);
+            }
+        }
 
         $book->update($validated);
 

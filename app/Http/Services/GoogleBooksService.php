@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Services;
+
+use Illuminate\Support\Facades\Http;
 
 class GoogleBooksService
 {
@@ -14,38 +16,38 @@ class GoogleBooksService
 
     public function searchBooks($query, $maxResults = 10)
     {
-        $queryParams = http_build_query([
+        $queryParams = [
             'q' => $query,
             'maxResults' => $maxResults,
             'key' => $this->apiKey
-        ]);
+        ];
 
-        $url = "{$this->baseUrl}/volumes?{$queryParams}";
+        $url = "{$this->baseUrl}/volumes";
 
-        return $this->makeRequest($url);
+        return $this->makeRequest($url, $queryParams);
     }
 
     public function getBookById($bookId)
     {
-        $url = "{$this->baseUrl}/volumes/{$bookId}?key={$this->apiKey}";
+        $url = "{$this->baseUrl}/volumes/{$bookId}";
+        $queryParams = ['key' => $this->apiKey];
 
-        return $this->makeRequest($url);
+        return $this->makeRequest($url, $queryParams);
     }
 
-    private function makeRequest($url)
+    private function makeRequest($url, $queryParams = [])
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        try {
+            $response = Http::get($url, $queryParams);
 
-        $response = curl_exec($ch);
-        curl_close($ch);
+            if ($response->failed()) {
+                return ['error' => 'Google Books API returned an error: HTTP ' . $response->status()];
+            }
 
-        if ($response === false) {
-            return ['error' => 'Error fetching data from Google Books API'];
+            return $response->json();
+
+        } catch (\Exception $e) {
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
-
-        return json_decode($response, true);
     }
 }
