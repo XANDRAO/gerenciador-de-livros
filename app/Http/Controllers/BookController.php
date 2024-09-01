@@ -70,13 +70,6 @@ class BookController extends Controller
             'cep' => 'required|string|max:9',
         ]);
 
-        // Buscar endereço usando BrasilAPI
-        $address = $this->brasilAPIService->getAddressByCep($validated['cep']);
-        
-        if (!$address) {
-            return response()->json(['error' => 'Invalid CEP or unable to fetch address'], 400);
-        }
-
         $book = new Book();
         $book->title = $validated['title'];
         $book->author_id = $validated['author_id'];

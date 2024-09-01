@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Book;
+use App\Models\Author;
+use App\Http\Services\GoogleBooksService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
-class CepController extends Controller
+class CepController
 {
-    public function index(Request $request)
+    private $baseUrl = 'http://brasilapi.com.br/api';
+
+    private $brasilAPIService;
+
+    public function __construct(BrasilAPIService $brasilAPIService)
     {
-        $cep = '29155663'; // Substitua pelo CEP que deseja testar
-
-        // URL da API do BrasilAPI
-        $url = "https://brasilapi.com.br/api/cep/v1/{$cep}";
-
-        // Fazendo a chamada à API com desativação da verificação SSL
-        $response = Http::withoutVerifying()->get($url);
-
-        // Verifica se a resposta foi bem-sucedida
-        if ($response->successful()) {
-            return response()->json($response->json());
-        }
-
-        // Retorna erro se a resposta não for bem-sucedida
-        return response()->json(['error' => 'Unable to fetch address'], 400);
+        $this->brasilAPIService = $brasilAPIService;
+    } 
+    
+    public function index(){
+        $address = $this->brasilAPIService->getAddressByCep($validated['cep']);
+        
+        if (!$address) {
+            return response()->json(['error' => 'Invalid CEP or unable to fetch address'], 400);
     }
+}
+
 }
