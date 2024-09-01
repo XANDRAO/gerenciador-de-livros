@@ -2,29 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Book;
-use App\Models\Author;
-use App\Http\Services\GoogleBooksService;
+use App\Http\Services\BrasilAPIService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Controller; 
 
-class CepController
+class CepController extends Controller
 {
-    private $baseUrl = 'http://brasilapi.com.br/api';
-
     private $brasilAPIService;
 
     public function __construct(BrasilAPIService $brasilAPIService)
     {
         $this->brasilAPIService = $brasilAPIService;
-    } 
-    
-    public function index(){
-        $address = $this->brasilAPIService->getAddressByCep($validated['cep']);
+    }
+
+    public function index($cep)
+    {
+        $address = $this->brasilAPIService->getAddressByCep($cep);
         
         if (!$address) {
             return response()->json(['error' => 'Invalid CEP or unable to fetch address'], 400);
-    }
-}
+        }
 
+        return response()->json($address);
+    }
 }
