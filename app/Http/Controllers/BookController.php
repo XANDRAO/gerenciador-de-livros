@@ -41,11 +41,33 @@ class BookController extends Controller
     }
 
     public function searchBooks(Request $request)
-    {
-        $query = $request->input('query');
-        $books = $this->googleBooksService->searchBooks($query);
-        return response()->json($books);
-    }
+{
+    $query = $request->input('query');
+
+    // 1. Buscar livros no banco de dados local
+    $localBooks = Book::where('title', 'like', '%' . $query . '%')->get();
+
+    // 2. Buscar livros na API do Google Books
+    $googleBooks = $this->googleBooksService->searchBooks($query);
+
+    // 3. Padronizar a resposta da API do Google Books para o formato do modelo de livro
+    $googleBooksFormatted = array_map(function ($book) {
+        return [
+            'title' => $book['volumeInfo']['title'] ?? '',
+            'author' => isset($book['volumeInfo']['authors']) ? implode(', ', $book['volumeInfo']['authors']) : '',
+            'publisher' => $book['volumeInfo']['publisher'] ?? '',
+            'published_date' => $book['volumeInfo']['publishedDate'] ?? '',
+            'description' => $book['volumeInfo']['description'] ?? '',
+            'thumbnail' => $book['volumeInfo']['imageLinks']['thumbnail'] ?? '',
+        ];
+    }, $googleBooks['items'] ?? []);
+
+    // 4. Combinar os resultados locais e da API
+    $combinedBooks = $localBooks->toArray(); // Converte os livros locais para array
+    $combinedBooks = array_merge($combinedBooks, $googleBooksFormatted); // Mescla com os livros da API
+    
+    return response()->json($combinedBooks);
+}
 
     public function download($id)
     {
@@ -77,10 +99,6 @@ class BookController extends Controller
         $book->publication_year = $validated['publication_year'];
         $book->pages_amount = $validated['pages_amount'];
         $book->isbn_number = $validated['isbn_number'];
-        $book->city = $address['city'] ?? null;
-        $book->state = $address['state'] ?? null;
-        $book->neighborhood = $address['neighborhood'] ?? null;
-        $book->street = $address['street'] ?? null;
 
         if ($request->hasFile('file')) {
             $filePath = $request->file('file')->store('books');
