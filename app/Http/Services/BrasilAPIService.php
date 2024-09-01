@@ -11,7 +11,7 @@ class BrasilAPIService
     public function getAddressByCep($cep)
     {
         $url = "{$this->baseUrl}/cep/v1/{$cep}";
-        $response = Http::get($url);
+        $response = Http::withoutVerifying()->get($url);
 
         if ($response->successful()) {
             return $response->json();
