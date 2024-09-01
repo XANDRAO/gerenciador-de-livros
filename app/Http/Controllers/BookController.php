@@ -62,7 +62,7 @@ class BookController extends Controller
         ];
     }, $googleBooks['items'] ?? []);
 
-    // 4. Combinar os resultados locais e da API
+    // 4. Combina os resultados locais e da API
     $combinedBooks = $localBooks->toArray(); // Converte os livros locais para array
     $combinedBooks = array_merge($combinedBooks, $googleBooksFormatted); // Mescla com os livros da API
     
