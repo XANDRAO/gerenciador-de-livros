@@ -38,10 +38,6 @@
             <textarea name="synopsis" id="synopsis" class="form-control" rows="3"></textarea>
         </div>
         <div class="form-group">
-            <label for="description">Descrição</label>
-            <textarea name="description" id="description" class="form-control" rows="5"></textarea>
-        </div>
-        <div class="form-group">
             <label for="file">Arquivo PDF</label>
             <input type="file" name="file" id="file" class="form-control">
         </div>
