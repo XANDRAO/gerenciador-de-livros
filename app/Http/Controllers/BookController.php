@@ -40,34 +40,45 @@ class BookController extends Controller
         return response()->json($book);
     }
 
-    public function searchBooks(Request $request)
-{
-    $query = $request->input('query');
-
-    // 1. Buscar livros no banco de dados local
-    $localBooks = Book::where('title', 'like', '%' . $query . '%')->get();
-
-    // 2. Buscar livros na API do Google Books
-    $googleBooks = $this->googleBooksService->searchBooks($query);
-
-    // 3. Padronizar a resposta da API do Google Books para o formato do modelo de livro
-    $googleBooksFormatted = array_map(function ($book) {
-        return [
-            'title' => $book['volumeInfo']['title'] ?? '',
-            'author' => isset($book['volumeInfo']['authors']) ? implode(', ', $book['volumeInfo']['authors']) : '',
-            'publisher' => $book['volumeInfo']['publisher'] ?? '',
-            'published_date' => $book['volumeInfo']['publishedDate'] ?? '',
-            'description' => $book['volumeInfo']['description'] ?? '',
-            'thumbnail' => $book['volumeInfo']['imageLinks']['thumbnail'] ?? '',
-        ];
-    }, $googleBooks['items'] ?? []);
-
-    // 4. Combina os resultados locais e da API
-    $combinedBooks = $localBooks->toArray(); // Converte os livros locais para array
-    $combinedBooks = array_merge($combinedBooks, $googleBooksFormatted); // Mescla com os livros da API
+    public function searchBooks($name)
+    {
+        $query = $name;
+        
+        // 1. Buscar livros no banco de dados local
+        $localBooks = Book::where('title', 'like', '%' . $query . '%')->get();
     
-    return response()->json($combinedBooks);
-}
+        // 2. Buscar livros na API do Google Books
+        $googleBooks = $this->googleBooksService->searchBooks($query);
+        
+        // Debug: Verificar a resposta da API do Google Books
+        if (isset($googleBooks['error'])) {
+            return response()->json(['error' => 'Erro ao buscar na API do Google Books: ' . $googleBooks['error']]);
+        }
+        // Verifique a estrutura da resposta da API do Google Books
+        
+        if (!isset($googleBooks['items'])) {
+            return response()->json(['message' => 'Nenhum livro encontrado na API do Google Books.']);
+        }
+
+        // 3. Padronizar a resposta da API do Google Books para o formato do modelo de livro
+        $googleBooksFormatted = array_map(function ($book) {
+            return [
+                'title' => $book['volumeInfo']['title'] ?? '',
+                'author' => isset($book['volumeInfo']['authors']) ? implode(', ', $book['volumeInfo']['authors']) : '',
+                'publisher' => $book['volumeInfo']['publisher'] ?? '',
+                'published_date' => $book['volumeInfo']['publishedDate'] ?? '',
+                'description' => $book['volumeInfo']['description'] ?? '',
+                'thumbnail' => $book['volumeInfo']['imageLinks']['thumbnail'] ?? '',
+            ];
+        }, $googleBooks['items']);
+        
+        // 4. Combinar os resultados locais e da API
+        
+        $combinedBooks = $localBooks->toArray(); // Converte os livros locais para array
+        $combinedBooks = array_merge($combinedBooks, $googleBooksFormatted); // Mescla com os livros da API
+        
+        return response()->json($combinedBooks);
+    }
 
     public function download($id)
     {
