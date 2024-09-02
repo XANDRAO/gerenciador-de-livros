@@ -34,7 +34,6 @@
                         <td>
                             <a href="{{ route('books.show', $book->id) }}" class="btn btn-info">Visualizar</a>
                             <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning">Editar</a>
-                            <!-- Adicione um botão de exclusão se desejar -->
                             <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
