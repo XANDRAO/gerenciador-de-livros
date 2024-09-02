@@ -11,7 +11,10 @@
             <thead>
                 <tr>
                     <th>Nome</th>
-                    <th>Bioografia</th>
+                    <th>Endereço</th>
+                    <th>Cidade</th>
+                    <th>Estado</th>
+                    <th>País</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -19,9 +22,12 @@
                 @foreach ($authors as $author)
                     <tr>
                         <td>{{ $author->name }}</td>
-                        <td>{{ $author->biografia }}</td>
+                        <td>{{ $author->street_address }}</td>
+                        <td>{{ $author->city }}</td>
+                        <td>{{ $author->state }}</td>
+                        <td>{{ $author->country }}</td>
                         <td>
-                            <a href="{{ route('authors.update', $author->id) }}" class="btn btn-warning">Editar</a>
+                            <a href="{{ route('authors.edit', $author->id) }}" class="btn btn-warning">Editar</a>
                             <form action="{{ route('authors.destroy', $author->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
