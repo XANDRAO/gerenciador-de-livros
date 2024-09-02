@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Services\BrasilAPIService;
+use App\Http\Services\BrasilAPIService; 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 
 class CepController extends Controller
 {
