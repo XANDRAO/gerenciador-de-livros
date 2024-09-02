@@ -18,8 +18,8 @@
                 <img src="{{ asset('storage/' . $author->picture_url) }}" alt="{{ $author->name }}" class="img-fluid">
             @endif
 
-            <a href="{{ route('authors.edit', $author->id) }}" class="btn btn-warning mt-3">Edit</a>
-            <a href="{{ route('authors.index') }}" class="btn btn-secondary mt-3">Back to List</a>
+            <a href="{{ route('authors.edit', $author->id) }}" class="btn btn-warning mt-3">Editar</a>
+            <a href="{{ route('authors.index') }}" class="btn btn-secondary mt-3">Voltar a Lista</a>
         </div>
     </div>
 </div>
