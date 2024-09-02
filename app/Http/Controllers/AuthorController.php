@@ -34,16 +34,17 @@ class AuthorController extends Controller
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
-            'picture_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'cep' => 'nullable|string|max:9',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        if ($request->hasFile('picture_url')) {
-            $picturePath = $request->file('picture_url')->store('authors');
+        if ($request->hasFile('picture')) {
+            $picturePath = $request->file('picture')->store('authors');
             $validated['picture_url'] = $picturePath;
         }
 
         Author::create($validated);
-        return redirect()->route('authors.index');
+        return redirect()->route('authors.index')->with('success', 'Autor adicionado com sucesso');
     }
 
     public function show($id)
@@ -51,7 +52,7 @@ class AuthorController extends Controller
         $author = Author::find($id);
 
         if (!$author) {
-            return redirect()->route('authors.index')->with('error', 'Author not found');
+            return redirect()->route('authors.index')->with('error', 'Autor não encontrado');
         }
 
         return view('authors.show', ['author' => $author]);
@@ -62,7 +63,7 @@ class AuthorController extends Controller
         $author = Author::find($id);
 
         if (!$author) {
-            return redirect()->route('authors.index')->with('error', 'Author not found');
+            return redirect()->route('authors.index')->with('error', 'Autor não encontrado');
         }
 
         return view('authors.edit', ['author' => $author]);
@@ -73,7 +74,7 @@ class AuthorController extends Controller
         $author = Author::find($id);
 
         if (!$author) {
-            return redirect()->route('authors.index')->with('error', 'Author not found');
+            return redirect()->route('authors.index')->with('error', 'Autor não encontrado');
         }
 
         $validated = $request->validate([
@@ -82,21 +83,22 @@ class AuthorController extends Controller
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
-            'picture_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'cep' => 'nullable|string|max:9',
+            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        if ($request->hasFile('picture_url')) {
+        if ($request->hasFile('picture')) {
             // Delete old picture if exists
             if ($author->picture_url) {
                 \Storage::delete($author->picture_url);
             }
 
-            $picturePath = $request->file('picture_url')->store('authors');
+            $picturePath = $request->file('picture')->store('authors');
             $validated['picture_url'] = $picturePath;
         }
 
         $author->update($validated);
-        return redirect()->route('authors.index');
+        return redirect()->route('authors.index')->with('success', 'Autor atualizado com sucesso');
     }
 
     public function destroy($id)
@@ -104,7 +106,7 @@ class AuthorController extends Controller
         $author = Author::find($id);
 
         if (!$author) {
-            return redirect()->route('authors.index')->with('error', 'Author not found');
+            return redirect()->route('authors.index')->with('error', 'Autor não encontrado');
         }
 
         // Delete picture if exists
@@ -113,6 +115,6 @@ class AuthorController extends Controller
         }
 
         $author->delete();
-        return redirect()->route('authors.index')->with('success', 'Author deleted successfully');
+        return redirect()->route('authors.index')->with('success', 'Autor excluído com sucesso');
     }
 }
