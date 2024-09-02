@@ -43,10 +43,11 @@
     </div>
 @endsection
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Inclua jQuery caso ainda não esteja incluído -->
 <script>
     $(document).ready(function() {
         $('#cep').on('input', function() {
-            let cep = $(this).val().replace(/\D/g, '');
+            let cep = $(this).val().replace(/\D/g, ''); // Remove qualquer caractere não numérico
 
             if (cep.length === 8) {
                 $.ajax({
@@ -54,12 +55,17 @@
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
-                        $('#street_address').val(data.street);
-                        $('#city').val(data.city);
-                        $('#state').val(data.state);
+                        $('#street_address').val(data.street || ''); // Preenche o endereço
+                        $('#city').val(data.city || ''); // Preenche a cidade
+                        $('#state').val(data.state || ''); // Preenche o estado
+                        $('#country').val('Brasil'); // Define o país como Brasil
                     },
-                    error: function() {
+                    error: function(xhr) {
                         alert('CEP não encontrado ou inválido.');
+                        $('#street_address').val(''); // Limpa o campo de endereço
+                        $('#city').val(''); // Limpa o campo de cidade
+                        $('#state').val(''); // Limpa o campo de estado
+                        $('#country').val('Brasil'); // Define o país como Brasil
                     }
                 });
             }
