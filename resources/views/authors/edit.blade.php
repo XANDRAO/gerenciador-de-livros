@@ -1,64 +1,82 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Autor')
-
 @section('content')
-    <div class="card">
-        <div class="card-header">
-            <h3>Editar Autor</h3>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('authors.update', $author->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
+    <div class="container">
+        <h1>Editar Autor</h1>
+        <form action="{{ route('authors.update', $author->id) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-                <!-- Nome -->
-                <div class="mb-3">
-                    <label for="name" class="form-label">Nome</label>
-                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $author->name) }}" required>
-                </div>
+            <div class="form-group">
+                <label for="name">Nome</label>
+                <input type="text" name="name" class="form-control" value="{{ old('name', $author->name) }}" required>
+            </div>
 
-                <!-- Endereço -->
-                <div class="mb-3">
-                    <label for="street_address" class="form-label">Endereço</label>
-                    <input type="text" class="form-control" id="street_address" name="street_address" value="{{ old('street_address', $author->street_address) }}">
-                </div>
+            <div class="form-group">
+                <label for="cep">CEP</label>
+                <input type="text" name="cep" id="cep" class="form-control" value="{{ old('cep', $author->cep) }}" placeholder="Digite o CEP">
+            </div>
 
-                <!-- Cidade -->
-                <div class="mb-3">
-                    <label for="city" class="form-label">Cidade</label>
-                    <input type="text" class="form-control" id="city" name="city" value="{{ old('city', $author->city) }}">
-                </div>
+            <div class="form-group">
+                <label for="street_address">Endereço</label>
+                <input type="text" name="street_address" id="street_address" class="form-control" value="{{ old('street_address', $author->street_address) }}">
+            </div>
 
-                <!-- Estado -->
-                <div class="mb-3">
-                    <label for="state" class="form-label">Estado</label>
-                    <input type="text" class="form-control" id="state" name="state" value="{{ old('state', $author->state) }}">
-                </div>
+            <div class="form-group">
+                <label for="city">Cidade</label>
+                <input type="text" name="city" id="city" class="form-control" value="{{ old('city', $author->city) }}">
+            </div>
 
-                <!-- País -->
-                <div class="mb-3">
-                    <label for="country" class="form-label">País</label>
-                    <input type="text" class="form-control" id="country" name="country" value="{{ old('country', $author->country) }}">
-                </div>
+            <div class="form-group">
+                <label for="state">Estado</label>
+                <input type="text" name="state" id="state" class="form-control" value="{{ old('state', $author->state) }}">
+            </div>
 
-                <!-- CEP -->
-                <div class="mb-3">
-                    <label for="cep" class="form-label">CEP</label>
-                    <input type="text" class="form-control" id="cep" name="cep" value="{{ old('cep', $author->cep) }}" maxlength="9">
-                </div>
+            <div class="form-group">
+                <label for="country">País</label>
+                <input type="text" name="country" class="form-control" value="{{ old('country', $author->country) ?? 'Brasil' }}" readonly>
+            </div>
 
-                <!-- Imagem -->
-                <div class="mb-3">
-                    <label for="picture" class="form-label">Imagem do Autor</label>
-                    <input type="file" class="form-control" id="picture" name="picture" accept="image/*">
-                    @if($author->picture_url)
-                        <img src="{{ $author->picture_url }}" alt="{{ $author->name }}" style="width: 100px; margin-top: 10px;">
-                    @endif
-                </div>
+            <div class="form-group">
+                <label for="picture_url">Foto</label>
+                <input type="file" name="picture_url" class="form-control">
+                @if ($author->picture_url)
+                    <img src="{{ asset('storage/' . $author->picture_url) }}" alt="{{ $author->name }}" class="img-fluid mt-2">
+                @endif
+            </div>
 
-                <button type="submit" class="btn btn-custom">Atualizar Autor</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </form>
     </div>
 @endsection
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Inclua jQuery caso ainda não esteja incluído -->
+<script>
+    $(document).ready(function() {
+        $('#cep').on('input', function() {
+            let cep = $(this).val().replace(/\D/g, ''); // Remove qualquer caractere não numérico
+
+            if (cep.length === 8) {
+                $.ajax({
+                    url: `https://brasilapi.com.br/api/cep/v2/${cep}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#street_address').val(data.street || ''); // Preenche o endereço
+                        $('#city').val(data.city || ''); // Preenche a cidade
+                        $('#state').val(data.state || ''); // Preenche o estado
+                        $('#country').val('Brasil'); // Define o país como Brasil
+                    },
+                    error: function(xhr) {
+                        alert('CEP não encontrado ou inválido.');
+                        $('#street_address').val(''); // Limpa o campo de endereço
+                        $('#city').val(''); // Limpa o campo de cidade
+                        $('#state').val(''); // Limpa o campo de estado
+                        $('#country').val('Brasil'); // Define o país como Brasil
+                    }
+                });
+            }
+        });
+    });
+</script>
+
