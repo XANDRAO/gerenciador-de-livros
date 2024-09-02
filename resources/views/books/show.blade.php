@@ -11,7 +11,7 @@
         @if($book->image_url)
             <img src="{{ $book->image_url }}" alt="Capa do Livro" style="width: 200px;">
         @endif
-        <p>Sinopse: {{ $book->synopsis }}</p> <!-- Adicione isso -->
+        <p>Sinopse: {{ $book->synopsis }}</p>
         @if(isset($book->file_url))
             <a href="{{ route('books.download', $book->id) }}" class="btn btn-primary">Baixar Arquivo</a>
         @endif
