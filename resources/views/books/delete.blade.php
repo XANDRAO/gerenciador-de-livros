@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container">
-        <h1>Delete Book</h1>
+        <h1>Deletar livro</h1>
         <div class="alert alert-danger">
-            <p>Are you sure you want to delete the book titled "{{ $book->title }}"?</p>
+            <p>Tem certeza de que deseja excluir o livro intitulado "{{ $book->title }}"?</p>
         </div>
         <form action="{{ route('books.destroy', $book->id) }}" method="POST">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-danger">Delete</button>
-            <a href="{{ route('books.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Deletar</button>
+            <a href="{{ route('books.index') }}" class="btn btn-secondary">Cancelar</a>
         </form>
     </div>
 @endsection
