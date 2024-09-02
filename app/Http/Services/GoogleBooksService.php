@@ -17,16 +17,15 @@ class GoogleBooksService
     public function searchBooks($query, $maxResults = 10)
     {
         $queryParams = [
-        'q' => $query,
-        'maxResults' => $maxResults,
-        'key' => $this->apiKey
-    ];
+            'q' => $query,
+            'maxResults' => $maxResults,
+            'key' => $this->apiKey
+        ];
 
-    $url = "{$this->baseUrl}/volumes";
+        $url = "{$this->baseUrl}/volumes";
 
-    return $this->makeRequest($url, $queryParams);
-}
-
+        return $this->makeRequest($url, $queryParams);
+    }
 
     public function getBookById($bookId)
     {
@@ -37,21 +36,20 @@ class GoogleBooksService
     }
 
     private function makeRequest($url, $queryParams = [])
-{
-    try {
-        $response = Http::withOptions([
-            'verify' => false, // Desativa a verificação SSL
-        ])->get($url, $queryParams);
+    {
+        try {
+            $response = Http::withOptions([
+                'verify' => false, // Desativa a verificação SSL
+            ])->get($url, $queryParams);
 
-        if ($response->failed()) {
-            return ['error' => 'Google Books API returned an error: HTTP ' . $response->status()];
+            if ($response->failed()) {
+                return ['error' => 'Google Books API returned an error: HTTP ' . $response->status()];
+            }
+
+            return $response->json();
+
+        } catch (\Exception $e) {
+            return ['error' => 'Exception occurred: ' . $e->getMessage()];
         }
-
-        return $response->json();
-
-    } catch (\Exception $e) {
-        return ['error' => 'Exception occurred: ' . $e->getMessage()];
     }
-}
-
 }
