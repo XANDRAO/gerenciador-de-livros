@@ -24,6 +24,7 @@ Route::get('/', function () {
 // Rotas públicas para livros
 //Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/search', [BookController::class, 'searchBooks'])->name('books.search');
+Route::get('books/{id}/download', [BookController::class, 'download'])->name('books.download');
 //Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
 //Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 //Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
