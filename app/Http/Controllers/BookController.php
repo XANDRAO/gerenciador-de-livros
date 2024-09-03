@@ -41,8 +41,6 @@ class BookController extends Controller
         ]);
     }
 
-
-
 public function show($id)
 {
     $book = Book::with('author')->find($id);
@@ -77,12 +75,21 @@ public function show($id)
     return view('books.show', compact('book'));
 }
 
-    
+
 public function searchBooks(Request $request)
 {
     $query = $request->input('query', '');
 
-    $localBooks = Book::with('author')->where('title', 'like', '%' . $query . '%')->get();
+    // Buscar livros localmente pelo título, ISBN ou nome do autor
+    $localBooks = Book::with('author')
+        ->where('title', 'like', '%' . $query . '%')
+        ->orWhere('isbn_number', 'like', '%' . $query . '%') // Busca pelo ISBN
+        ->orWhereHas('author', function ($queryBuilder) use ($query) { // Busca pelo nome do autor
+            $queryBuilder->where('name', 'like', '%' . $query . '%');
+        })
+        ->get();
+    
+    // Buscar livros na API do Google Books
     $googleBooks = $this->googleBooksService->searchBooks($query);
 
     // Verificar a resposta da API do Google Books
@@ -91,7 +98,38 @@ public function searchBooks(Request $request)
     }
 
     if (!isset($googleBooks['items'])) {
-        return redirect()->route('books.index')->with('message', 'Nenhum livro encontrado na API do Google Books.');
+        // Se a API não retornar itens, exibir mensagem de livro não encontrado
+        $combinedBooks = $localBooks->map(function ($book) {
+            return (object) [
+                'id' => $book->id, 
+                'title' => $book->title,
+                'author' => $book->author ? $book->author->name : 'Autor Desconhecido',
+                'publisher' => $book->publisher,
+                'publication_year' => $book->publication_year,
+                'cover_url' => $book->cover_url ?? '', 
+                'isbn' => $book->isbn_number ?? 'ISBN não disponível',
+                'page_count' => $book->pages_amount ?? 'Número de Páginas Desconhecido'
+            ];
+        })->toArray();
+
+        if (empty($combinedBooks)) {
+            return view('books.not_found'); // Mostrar view de livro não encontrado
+        }
+
+        $perPage = 10;
+        $currentPage = $request->input('page', 1);
+
+        $paginatedBooks = collect($combinedBooks)->forPage($currentPage, $perPage);
+
+        $books = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedBooks,
+            count($combinedBooks),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('books.search', ['books' => $books]);
     }
 
     // Padroniza a resposta da API do Google Books para o formato do modelo de livro
@@ -140,6 +178,8 @@ public function searchBooks(Request $request)
 
     return view('books.search', ['books' => $books]);
 }
+
+
     
     private function getIsbn($identifiers)
     {
@@ -153,6 +193,38 @@ public function searchBooks(Request $request)
         return 'ISBN não disponível';
     }
     
+
+    public function showByIsbn($isbn)
+    {
+        // Verifica se o livro já existe na base de dados local
+        $book = Book::where('isbn_number', $isbn)->first();
+
+        if ($book) {
+            return view('books.show', compact('book'));
+        }
+
+        // Se não existir localmente, busca na API do Google Books
+        $googleBookData = $this->googleBooksService->searchByIsbn($isbn);
+
+        if (!$googleBookData) {
+            return view('books.not-found');
+        }
+
+        // Cria um novo livro na base de dados local
+        $book = Book::create([
+            'title' => $googleBookData['title'] ?? 'Título desconhecido',
+            'author_id' => null, // Você pode adicionar lógica para associar autores se necessário
+            'publisher' => $googleBookData['publisher'] ?? 'Editora desconhecida',
+            'publication_year' => $googleBookData['publishedDate'] ?? null,
+            'pages_amount' => $googleBookData['pageCount'] ?? null,
+            'isbn_number' => $isbn,
+            'synopsis' => $googleBookData['description'] ?? null,
+            'file_url' => null,
+            'cover_url' => $googleBookData['thumbnail'] ?? null,
+        ]);
+
+        return view('books.show', compact('book'));
+    }
     
     public function download($id)
     {
