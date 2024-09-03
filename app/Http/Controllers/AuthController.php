@@ -47,6 +47,21 @@ class AuthController extends Controller
     return redirect()->route('books.index')->with('success', 'Registration successful, you are now logged in.');
 }
 
+// AuthController.php
+
+public function home()
+{
+    if (Auth::check()) {  // Verifica se o usuário está autenticado
+        // Se o usuário estiver logado, redireciona para a lista de livros
+        return redirect()->route('books.index');
+    }
+
+    // Se não estiver logado, exibe a página home
+    return view('home'); // Certifique-se de ter a view 'home.blade.php' em resources/views/
+}
+
+
+
     public function logout()
     {
         Auth::logout();
