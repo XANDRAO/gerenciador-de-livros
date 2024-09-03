@@ -1,66 +1,76 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gerenciador de Livros
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Visão Geral
 
-## About Laravel
+Este projeto é um gerenciador de livros desenvolvido como parte de um teste técnico para uma vaga de desenvolvedor full stack júnior PHP. O aplicativo é construído usando o framework Laravel e oferece integração com o Google Books para permitir pesquisas detalhadas sobre livros. Além disso, possui integração com o AWS S3 para upload e visualização de capas de livros e arquivos PDF.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Funcionalidades Principais
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Usuários Anônimos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   _Listagem de Livros_: Usuários não autenticados podem visualizar uma lista de todos os livros disponíveis na plataforma.
+-   _Pesquisa de Livros_: Permite a busca por livros através do nome do livro;
+-   _Detalhes do Livro_: Os detalhes de cada livro incluem título, sinopse, quantidade de páginas, ISBN, autor, editora, capa do livro, e um link para download do PDF se o livro for cadastrado na plataforma (e não através do Google Books).
 
-## Learning Laravel
+### Usuários Cadastrados (Editoras)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+-   _Gerenciamento de Autores_: Usuários cadastrados podem criar, editar e excluir autores.
+-   _Gerenciamento de Livros_: Usuários cadastrados podem criar, editar e excluir livros associados aos autores que eles criaram.
+-   _Upload de Arquivos_: Os usuários podem fazer upload de capas de livros e arquivos PDF para o AWS S3, que serão armazenados e acessíveis através de URLs públicas.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Integrações
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Google Books API
 
-## Laravel Sponsors
+-   A integração com o Google Books permite que o sistema realize buscas mais abrangentes de livros, retornando informações detalhadas como título, autor, editora, sinopse, e outras informações bibliográficas.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### AWS S3
 
-### Premium Partners
+-   _Upload de Arquivos_: O AWS S3 é usado para armazenar as capas dos livros e os arquivos PDF. Os arquivos são carregados através do formulário de upload no sistema e são armazenados de forma segura no bucket do S3 configurado.
+-   _Acesso Público_: Após o upload, as capas dos livros e os arquivos PDF são disponibilizados via URLs públicas, facilitando a visualização e o download.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+## Requisitos
 
-## Contributing
+-   PHP 8.0+
+-   Laravel 9.x
+-   Composer
+-   Banco de Dados MySQL
+-   Conta AWS S3
+-   Google Books API Key
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Instalação
 
-## Code of Conduct
+1. **Clone o Repositório**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/XANDRAO/gerenciador-de-livros.git
+cd gerenciador-de-livros
+```
 
-## Security Vulnerabilities
+2. Instale as Dependências
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install
+```
 
-## License
+3. Configure o Arquivo .env
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+-   Copie o arquivo .env.example para .env e configure os detalhes do banco de dados, Google Books API, e AWS S3.
+
+4. Gere a Chave da Aplicação
+
+```bash
+php artisan key:generate
+```
+
+5. Execute as Migrações e Seeders
+
+```bash
+php artisan migrate
+```
+
+6. Inicie o Servidor
+
+```bash
+php artisan serve
+```
