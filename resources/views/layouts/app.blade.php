@@ -95,7 +95,7 @@
     </div>
 
     <footer>
-        <p>© 2024 Gerenciador de Livros. Todos os direitos reservados.</p>
+        <p>© Alexandre de Souza 2024 Gerenciador de Livros. Todos os direitos reservados.</p>
     </footer>
 
     <!-- Bootstrap 5 JS -->
