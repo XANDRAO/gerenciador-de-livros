@@ -35,12 +35,18 @@
                 <label for="country">País</label>
                 <input type="text" name="country" class="form-control" value="Brasil" readonly>
             </div>
+            
+            <div class="form-group">
+                <label for="picture">Foto do Autor</label>
+                <input type="file" name="picture" id="picture" class="form-control" accept="image/*">
+            </div>
 
             <button type="submit" class="btn btn-primary">Salvar</button>
         </form>
     </div>
 @endsection
 
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
 <script>
     $(document).ready(function() {
