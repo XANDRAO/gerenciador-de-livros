@@ -17,7 +17,7 @@ class Book extends Model
         'pages_amount', 
         'isbn_number', 
         'file_url', 
-        'image_name', 
+        'cover_url', 
         'synopsis',
     ];
     
