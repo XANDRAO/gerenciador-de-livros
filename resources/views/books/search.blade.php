@@ -23,13 +23,13 @@
                             <td>{{ $book->publisher }}</td>
                             <td>{{ $book->publication_year }}</td>
                             <td>
-                                @if($book->image_url)
-                                    <img src="{{ $book->image_url }}" alt="Capa do Livro" style="width: 100px;">
+                                @if(!empty($book->cover_url))
+                                <img src="{{ $book->cover_url }}" alt="Capa do Livro" style="width: 200px;">
                                 @endif
+
                             </td>
                             <td>
                                 <a href="{{ route('books.show', $book->id) }}" class="btn btn-info">Visualizar</a>
-
                             </td>
                         </tr>
                     @endforeach
@@ -37,7 +37,8 @@
             </table>
         @else
             <p>Nenhum livro encontrado com a sua pesquisa.</p>
+            <a href="{{ route('books.search', ['query' => request('query')]) }}" class="btn btn-secondary">Voltar para Pesquisa</a>
+
         @endif
-        <a href="{{ route('books.index') }}" class="btn btn-secondary">Voltar para Lista</a>
     </div>
 @endsection

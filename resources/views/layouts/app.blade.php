@@ -74,6 +74,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('register') }}">Registrar</a>
                         </li>
+                        <a href="{{ route('home') }}" class="btn btn-primary">Home</a>
                     @else
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('logout') }}"

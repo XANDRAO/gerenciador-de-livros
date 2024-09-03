@@ -50,7 +50,7 @@ Route::resource('books', BookController::class);
 
 // Rota para consultar CEP
 Route::get('/cep/{cep}', [CepController::class, 'index'])->name('cep.index');
-
+Route::get('/books/isbn/{isbn}', [BookController::class, 'showBookByIsbn'])->name('books.showByIsbn');
 // Rotas autenticadas para livros
 //Route::middleware('auth:sanctum')->group(function () {
     //Route::put('/books/{id}', [BookController::class, 'update'])->name('books.update');
@@ -72,3 +72,6 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [AuthController::class, 'register'])->name('register');
 
+Route::get('/', [AuthController::class, 'home'])->name('home');
+
+Route::get('/home', [AuthController::class, 'home']);
