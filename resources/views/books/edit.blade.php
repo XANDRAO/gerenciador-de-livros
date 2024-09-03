@@ -62,9 +62,6 @@
                 <div class="mb-3">
                     <label for="file" class="form-label">Arquivo PDF</label>
                     <input type="file" class="form-control" id="file" name="file" accept=".pdf">
-                    @if($book->file_url)
-                        <a href="{{ Storage::url($book->file_url) }}" target="_blank">Visualizar PDF Atual</a>
-                    @endif
                 </div>
 
                 <!-- Imagem -->
