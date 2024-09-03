@@ -25,27 +25,38 @@ class AuthorController extends Controller
     {
         return view('authors.create');
     }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'street_address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'cep' => 'nullable|string|max:9',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'name' => 'required|string|max:255',
+        'street_address' => 'nullable|string|max:255',
+        'city' => 'nullable|string|max:255',
+        'state' => 'nullable|string|max:255',
+        'country' => 'nullable|string|max:255',
+        'cep' => 'nullable|string|max:9',
+        'picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
+
+    $author = new Author($validated);
+
+    // Manipula a imagem do autor, se existir
+    if ($request->hasFile('picture')) {
+        $picturePath = $request->file('picture')->store('authors', 's3', [
+            'visibility' => 'public',
         ]);
 
-        if ($request->hasFile('picture')) {
-            $picturePath = $request->file('picture')->store('authors');
-            $validated['picture_url'] = $picturePath;
+        if ($picturePath) {
+            $author->picture_url = env('AWS_URL') . '/' . $picturePath;  // Constrói a URL completa do S3
+        } else {
+            return back()->withErrors('Erro ao salvar a imagem no S3.');
         }
-
-        Author::create($validated);
-        return redirect()->route('authors.index')->with('success', 'Autor adicionado com sucesso');
     }
+
+    $author->save();
+
+    return redirect()->route('authors.index')->with('success', 'Autor adicionado com sucesso!');
+}
+
 
     public function show($id)
     {
