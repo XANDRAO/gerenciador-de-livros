@@ -4,7 +4,6 @@
     <h1>Criar Livro</h1>
     <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        <!-- Campos do formulário -->
         <div class="form-group">
             <label for="title">Título</label>
             <input type="text" name="title" id="title" class="form-control" required>

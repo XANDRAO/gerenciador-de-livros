@@ -9,15 +9,15 @@ class AddSynopsisAndDescriptionToBooksTable extends Migration
     public function up()
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->text('synopsis')->nullable(); // Adiciona a coluna 'synopsis'
-            $table->text('description')->nullable(); // Adiciona a coluna 'description'
+            $table->text('synopsis')->nullable(); 
+            $table->text('description')->nullable(); 
         });
     }
 
     public function down()
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->dropColumn(['synopsis', 'description']); // Remove as colunas 'synopsis' e 'description'
+            $table->dropColumn(['synopsis', 'description']); 
         });
     }
 }

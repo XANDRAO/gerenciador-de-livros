@@ -88,7 +88,6 @@ class AuthorController extends Controller
         ]);
 
         if ($request->hasFile('picture')) {
-            // Delete old picture if exists
             if ($author->picture_url) {
                 \Storage::delete($author->picture_url);
             }
@@ -108,8 +107,7 @@ class AuthorController extends Controller
         if (!$author) {
             return redirect()->route('authors.index')->with('error', 'Autor não encontrado');
         }
-
-        // Delete picture if exists
+        
         if ($author->picture_url) {
             \Storage::delete($author->picture_url);
         }

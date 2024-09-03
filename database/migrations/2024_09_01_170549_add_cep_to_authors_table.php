@@ -9,14 +9,14 @@ class AddCepToAuthorsTable extends Migration
     public function up()
     {
         Schema::table('authors', function (Blueprint $table) {
-            $table->string('cep', 9)->nullable()->after('country'); // Adiciona a coluna cep
+            $table->string('cep', 9)->nullable()->after('country');
         });
     }
 
     public function down()
     {
         Schema::table('authors', function (Blueprint $table) {
-            $table->dropColumn('cep'); // Remove a coluna cep se a migração for revertida
+            $table->dropColumn('cep'); 
         });
     }
 }

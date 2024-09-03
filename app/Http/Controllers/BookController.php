@@ -10,17 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
+
+
 class BookController extends Controller
 {
     private $googleBooksService;
     private $brasilAPIService;
-
+    
     public function __construct(GoogleBooksService $googleBooksService, BrasilAPIService $brasilAPIService)
     {
         $this->googleBooksService = $googleBooksService;
         $this->brasilAPIService = $brasilAPIService;
     }
-
     public function index(Request $request)
     {
         $page = $request->query('page', 1);
@@ -28,10 +29,9 @@ class BookController extends Controller
     
         $books = Book::with('author')->whereHas('author')->paginate($limit, ['*'], 'page', $page);
     
-        // Retornar a view com os dados dos livros
         return view('books.index', ['books' => $books]);
     }
-
+    
     public function create()
     {
         $authors = Author::all();
@@ -45,10 +45,9 @@ class BookController extends Controller
 
 public function show($id)
 {
-    // Tenta encontrar o livro no banco de dados
     $book = Book::with('author')->find($id);
 
-    // Se o livro não for encontrado no banco de dados, buscar na API do Google Books
+    // Se o livro não for encontrado no banco de dados, buscar na API do GoogleBooks
     if (!$book) {
         $googleBook = $this->googleBooksService->getBookById($id);
         if (isset($googleBook['error'])) {
@@ -59,7 +58,7 @@ public function show($id)
             return redirect()->route('books.index')->with('message', 'Nenhum livro encontrado na API do Google Books.');
         }
 
-        // Padronizar a resposta da API do Google Books para o formato do modelo de livro
+        // Padroniza a resposta da API do Google Books para o formato do modelo de livro
         $book = (object) [
             'id' => $googleBook['id'] ?? '',
             'title' => $googleBook['volumeInfo']['title'] ?? 'Título Desconhecido',
@@ -75,7 +74,6 @@ public function show($id)
         ];
     }
 
-    // Retornar a view com os dados do livro
     return view('books.show', compact('book'));
 }
 
@@ -84,10 +82,7 @@ public function searchBooks(Request $request)
 {
     $query = $request->input('query', '');
 
-    // Buscar livros no banco de dados local
     $localBooks = Book::with('author')->where('title', 'like', '%' . $query . '%')->get();
-
-    // Buscar livros na API do Google Books
     $googleBooks = $this->googleBooksService->searchBooks($query);
 
     // Verificar a resposta da API do Google Books
@@ -99,10 +94,10 @@ public function searchBooks(Request $request)
         return redirect()->route('books.index')->with('message', 'Nenhum livro encontrado na API do Google Books.');
     }
 
-    // Padronizar a resposta da API do Google Books para o formato do modelo de livro
+    // Padroniza a resposta da API do Google Books para o formato do modelo de livro
     $googleBooksFormatted = array_map(function ($book) {
         return (object) [
-            'id' => $book['id'] ?? '', // Usar o ID real do livro da API
+            'id' => $book['id'] ?? '',
             'title' => $book['volumeInfo']['title'] ?? 'Título Desconhecido',
             'author' => isset($book['volumeInfo']['authors']) ? implode(', ', $book['volumeInfo']['authors']) : 'Autor Desconhecido',
             'publisher' => $book['volumeInfo']['publisher'] ?? 'Editora Desconhecida',
@@ -113,31 +108,28 @@ public function searchBooks(Request $request)
         ];
     }, $googleBooks['items']);
 
-    // Converter livros locais para um array simples
+    // Converte livros locais para um array simples
     $localBooksFormatted = $localBooks->map(function ($book) {
         return (object) [
-            'id' => $book->id, // Inclui o ID real dos livros locais
+            'id' => $book->id, 
             'title' => $book->title,
             'author' => $book->author ? $book->author->name : 'Autor Desconhecido',
             'publisher' => $book->publisher,
             'publication_year' => $book->publication_year,
-            'cover_url' => $book->cover_url ?? '', // Inclui a imagem se disponível
+            'cover_url' => $book->cover_url ?? '', 
             'isbn' => $book->isbn_number ?? 'ISBN não disponível',
             'page_count' => $book->pages_amount ?? 'Número de Páginas Desconhecido'
         ];
     });
 
-    // Combinar os resultados locais e da API
+    // Combina os resultados locais e da API
     $combinedBooks = array_merge($localBooksFormatted->toArray(), $googleBooksFormatted);
 
-    // Número de itens por página
     $perPage = 10;
     $currentPage = $request->input('page', 1);
 
-    // Converter para uma coleção Laravel para poder usar o método paginate
     $paginatedBooks = collect($combinedBooks)->forPage($currentPage, $perPage);
 
-    // Criar uma instância de LengthAwarePaginator
     $books = new \Illuminate\Pagination\LengthAwarePaginator(
         $paginatedBooks,
         count($combinedBooks),
@@ -168,10 +160,10 @@ public function searchBooks(Request $request)
         if (!$book || !$book->file_url) {
             return redirect()->route('books.index')->withErrors('File not found');
         }
-        // Verifique se o arquivo está armazenado no S3
+
         if (strpos($book->file_url, 's3://') === 0) {
             $fileUrl = str_replace('s3://', env('AWS_URL') . '/', $book->file_url);
-            // Redireciona para o URL do S3
+
             return redirect()->away($fileUrl);
         }
 
@@ -185,7 +177,6 @@ public function searchBooks(Request $request)
 }
 public function store(Request $request)
 {
-    // Validação dos dados recebidos
     $validated = $request->validate([
         'title' => 'required|string|max:255',
         'author_id' => 'required|exists:authors,id',
@@ -193,12 +184,11 @@ public function store(Request $request)
         'publication_year' => 'required|date_format:Y',
         'pages_amount' => 'required|integer',
         'isbn_number' => 'required|string|unique:books,isbn_number',
-        'file' => 'nullable|file|mimes:pdf|max:20480',  // Validação do PDF
-        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',  // Validação da imagem
+        'file' => 'nullable|file|mimes:pdf|max:20480', 
+        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',  
         'synopsis' => 'nullable|string',
     ]);
 
-    // Criação do novo livro
     $book = Book::create([
         'title' => $validated['title'],
         'author_id' => $validated['author_id'],
@@ -209,36 +199,35 @@ public function store(Request $request)
         'synopsis' => $validated['synopsis'],
     ]);
 
-    // Manipulação de arquivo PDF, se existir
+    // Manipula o arquivo PDF, se existir
     if ($request->hasFile('file')) {
         $filePath = $request->file('file')->store('gerenciador-de-livros', 's3', [
             'visibility' => 'public'
         ]);
 
         if ($filePath) {
-            $book->file_url = env('AWS_URL') . '/' . $filePath;  // Adiciona a URL completa do S3
+            $book->file_url = env('AWS_URL') . '/' . $filePath; 
         } else {
             return back()->withErrors('Erro ao salvar o arquivo PDF no S3.');
         }
     }
 
-    // Manipulação de imagem, se existir
+    // Manipula a imagem, se existir
     if ($request->hasFile('image')) {
         $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3', [
             'visibility' => 'public'
         ]);
 
         if ($imagePath) {
-            $book->cover_url = env('AWS_URL') . '/' . $imagePath;  // Adiciona a URL completa do S3
+            $book->cover_url = env('AWS_URL') . '/' . $imagePath; 
         } else {
             return back()->withErrors('Erro ao salvar a imagem no S3.');
         }
     }
 
-    // Salvar as alterações no banco de dados
+    
     $book->save();
-
-    // Redirecionar para a lista de livros com mensagem de sucesso
+    
     return redirect()->route('books.index')->with('success', 'Livro adicionado com sucesso!');
 }
        
@@ -261,73 +250,61 @@ public function update(Request $request, $id)
         'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
     ]);
 
-    // Atualizar o livro com os dados validados
     $book->update($validated);
 
-    // Manipulação de arquivo PDF, se existir
+    // Manipula o arquivo PDF, se existir
     if ($request->hasFile('file')) {
-        // Excluir o arquivo antigo, se existir
         if ($book->file_url) {
-            // Extrair o caminho do arquivo do S3 e excluir
+        
             $oldFilePath = str_replace(env('AWS_URL') . '/', '', $book->file_url);
             Storage::disk('s3')->delete($oldFilePath);
         }
 
-        // Upload do novo arquivo para o S3
         $filePath = $request->file('file')->store('gerenciador-de-livros', 's3', [
             'visibility' => 'public'
         ]);
 
         if ($filePath) {
-            $book->file_url = env('AWS_URL') . '/' . $filePath;  // Atualiza a URL completa do S3
+            $book->file_url = env('AWS_URL') . '/' . $filePath;  
         } else {
             return back()->withErrors('Erro ao salvar o arquivo PDF no S3.');
         }
     }
 
-    // Manipulação de imagem, se existir
     if ($request->hasFile('image')) {
-        // Excluir a imagem antiga, se existir
         if ($book->cover_url) {
-            // Extrair o caminho da imagem do S3 e excluir
+
             $oldImagePath = str_replace(env('AWS_URL') . '/', '', $book->cover_url);
             Storage::disk('s3')->delete($oldImagePath);
         }
 
-        // Upload da nova imagem para o S3
         $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3', [
             'visibility' => 'public'
         ]);
 
         if ($imagePath) {
-            $book->cover_url = env('AWS_URL') . '/' . $imagePath;  // Atualiza a URL completa do S3
+            $book->cover_url = env('AWS_URL') . '/' . $imagePath;  
         } else {
             return back()->withErrors('Erro ao salvar a imagem no S3.');
         }
     }
 
-    // Salvar as alterações no banco de dados
     $book->save();
 
     return redirect()->route('books.index')->with('success', 'Livro atualizado com sucesso!');
 }
 
-
-
     public function edit($id)
 {
-    // Obtém o livro a ser editado
     $book = Book::findOrFail($id);
 
-    // Obtém a lista de autores
     $authors = Author::all();
 
-    // Passa o livro e a lista de autores para a view
     return view('books.edit', ['book' => $book, 'authors' => $authors]);
 }
 
- 
-public function destroy($id)
+
+   public function destroy($id)
 {
     $book = Book::findOrFail($id);
     $book->delete();

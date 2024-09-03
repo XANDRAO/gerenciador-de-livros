@@ -3,11 +3,9 @@
 @section('content')
     <div class="container">
         <h1>Lista de Livros</h1>
-        
-        <!-- Botão de Adicionar Livro -->
+    
         <a href="{{ route('books.create') }}" class="btn btn-success mb-4">Adicionar Livro</a>
         
-        <!-- Formulário de Pesquisa -->
         <form action="{{ route('books.search') }}" method="GET" class="mb-4">
             <input type="text" name="query" placeholder="Pesquisar livros" class="form-control" required>
             <button type="submit" class="btn btn-primary mt-2">Pesquisar</button>
@@ -44,7 +42,6 @@
                     @endforeach
                 </tbody>
             </table>
-            <!-- Paginação -->
             {{ $books->links() }}
             @else
             <p>Nenhum livro encontrado.</p>
