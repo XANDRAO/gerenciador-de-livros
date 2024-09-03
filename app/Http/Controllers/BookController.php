@@ -33,13 +33,13 @@ class BookController extends Controller
     }
 
     public function create()
-{
-    $authors = Author::all();
-    return view('books.create', [
-        'authors' => $authors,
-        'book' => new Book()
-    ]);
-}
+    {
+        $authors = Author::all();
+        return view('books.create', [
+            'authors' => $authors,
+            'book' => new Book()
+        ]);
+    }
 
 
 
@@ -148,34 +148,32 @@ public function searchBooks(Request $request)
 
     return view('books.search', ['books' => $books]);
 }
-
-
-
-private function getIsbn($identifiers)
-{
-    foreach ($identifiers as $identifier) {
-        if ($identifier['type'] === 'ISBN_13') {
-            return $identifier['identifier'];
-        } elseif ($identifier['type'] === 'ISBN_10') {
-            return $identifier['identifier'];
+    
+    private function getIsbn($identifiers)
+    {
+        foreach ($identifiers as $identifier) {
+            if ($identifier['type'] === 'ISBN_13') {
+                return $identifier['identifier'];
+            } elseif ($identifier['type'] === 'ISBN_10') {
+                return $identifier['identifier'];
+            }
         }
+        return 'ISBN não disponível';
     }
-    return 'ISBN não disponível';
-}
-public function download($id)
-{
-    $book = Book::find($id);
-    if (!$book || !$book->file_url) {
-        return redirect()->route('books.index')->withErrors('File not found');
-    }
-
-    // Verifique se o arquivo está armazenado no S3
-    if (strpos($book->file_url, 's3://') === 0) {
-        $fileUrl = str_replace('s3://', env('AWS_URL') . '/', $book->file_url);
-
-        // Redireciona para o URL do S3
-        return redirect()->away($fileUrl);
-    }
+    
+    
+    public function download($id)
+    {
+        $book = Book::find($id);
+        if (!$book || !$book->file_url) {
+            return redirect()->route('books.index')->withErrors('File not found');
+        }
+        // Verifique se o arquivo está armazenado no S3
+        if (strpos($book->file_url, 's3://') === 0) {
+            $fileUrl = str_replace('s3://', env('AWS_URL') . '/', $book->file_url);
+            // Redireciona para o URL do S3
+            return redirect()->away($fileUrl);
+        }
 
     // Caso o arquivo esteja no armazenamento local
     $filePath = storage_path('app/' . $book->file_url);
