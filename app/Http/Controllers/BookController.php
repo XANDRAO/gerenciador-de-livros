@@ -68,7 +68,7 @@ public function show($id)
             ],
             'publisher' => $googleBook['volumeInfo']['publisher'] ?? 'Editora Desconhecida',
             'publication_year' => $googleBook['volumeInfo']['publishedDate'] ?? 'Data Desconhecida',
-            'image_url' => $googleBook['volumeInfo']['imageLinks']['thumbnail'] ?? '',
+            'cover_url' => $googleBook['volumeInfo']['imageLinks']['thumbnail'] ?? '', 
             'synopsis' => $googleBook['volumeInfo']['description'] ?? 'Sinopse não disponível',
             'isbn_number' => $this->getIsbn($googleBook['volumeInfo']['industryIdentifiers'] ?? []),
             'pages_amount' => $googleBook['volumeInfo']['pageCount'] ?? 'Número de Páginas Desconhecido'
@@ -107,7 +107,7 @@ public function searchBooks(Request $request)
             'author' => isset($book['volumeInfo']['authors']) ? implode(', ', $book['volumeInfo']['authors']) : 'Autor Desconhecido',
             'publisher' => $book['volumeInfo']['publisher'] ?? 'Editora Desconhecida',
             'publication_year' => $book['volumeInfo']['publishedDate'] ?? 'Data Desconhecida',
-            'image_url' => $book['volumeInfo']['imageLinks']['thumbnail'] ?? '',
+            'cover_url' => $book['volumeInfo']['imageLinks']['thumbnail'] ?? '',
             'isbn' => $this->getIsbn($book['volumeInfo']['industryIdentifiers'] ?? []),
             'page_count' => $book['volumeInfo']['pageCount'] ?? 'Número de Páginas Desconhecido'
         ];
@@ -121,7 +121,7 @@ public function searchBooks(Request $request)
             'author' => $book->author ? $book->author->name : 'Autor Desconhecido',
             'publisher' => $book->publisher,
             'publication_year' => $book->publication_year,
-            'image_url' => $book->image_url ?? '', // Inclui a imagem se disponível
+            'cover_url' => $book->cover_url ?? '', // Inclui a imagem se disponível
             'isbn' => $book->isbn_number ?? 'ISBN não disponível',
             'page_count' => $book->pages_amount ?? 'Número de Páginas Desconhecido'
         ];
@@ -195,8 +195,8 @@ public function store(Request $request)
         'publication_year' => 'required|date_format:Y',
         'pages_amount' => 'required|integer',
         'isbn_number' => 'required|string|unique:books,isbn_number',
-        'file' => 'nullable|file|mimes:pdf|max:20480',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'file' => 'nullable|file|mimes:pdf|max:20480',  // Validação do PDF
+        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',  // Validação da imagem
         'synopsis' => 'nullable|string',
     ]);
 
@@ -216,13 +216,25 @@ public function store(Request $request)
         $filePath = $request->file('file')->store('gerenciador-de-livros', 's3', [
             'visibility' => 'public'
         ]);
-        $book->file_url = env('AWS_URL') . '/' . $filePath;  // Adiciona a URL completa do S3
+
+        if ($filePath) {
+            $book->file_url = env('AWS_URL') . '/' . $filePath;  // Adiciona a URL completa do S3
+        } else {
+            return back()->withErrors('Erro ao salvar o arquivo PDF no S3.');
+        }
     }
 
     // Manipulação de imagem, se existir
     if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3');
-      $book->image_url = env('AWS_URL') . '/' . $imagePath;  // Adiciona a URL completa do S3
+        $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3', [
+            'visibility' => 'public'
+        ]);
+
+        if ($imagePath) {
+            $book->cover_url = env('AWS_URL') . '/' . $imagePath;  // Adiciona a URL completa do S3
+        } else {
+            return back()->withErrors('Erro ao salvar a imagem no S3.');
+        }
     }
 
     // Salvar as alterações no banco de dados
@@ -258,27 +270,50 @@ public function update(Request $request, $id)
     if ($request->hasFile('file')) {
         // Excluir o arquivo antigo, se existir
         if ($book->file_url) {
-            Storage::delete($book->file_url);
+            // Extrair o caminho do arquivo do S3 e excluir
+            $oldFilePath = str_replace(env('AWS_URL') . '/', '', $book->file_url);
+            Storage::disk('s3')->delete($oldFilePath);
         }
-        $filePath = $request->file('file')->store('books');
-        $book->file_url = $filePath;
+
+        // Upload do novo arquivo para o S3
+        $filePath = $request->file('file')->store('gerenciador-de-livros', 's3', [
+            'visibility' => 'public'
+        ]);
+
+        if ($filePath) {
+            $book->file_url = env('AWS_URL') . '/' . $filePath;  // Atualiza a URL completa do S3
+        } else {
+            return back()->withErrors('Erro ao salvar o arquivo PDF no S3.');
+        }
     }
 
     // Manipulação de imagem, se existir
     if ($request->hasFile('image')) {
         // Excluir a imagem antiga, se existir
-        if ($book->image_name) {
-            Storage::delete($book->image_name);
+        if ($book->cover_url) {
+            // Extrair o caminho da imagem do S3 e excluir
+            $oldImagePath = str_replace(env('AWS_URL') . '/', '', $book->cover_url);
+            Storage::disk('s3')->delete($oldImagePath);
         }
-        $imagePath = $request->file('image')->store('images');
-        $book->image_name = $imagePath;
+
+        // Upload da nova imagem para o S3
+        $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3', [
+            'visibility' => 'public'
+        ]);
+
+        if ($imagePath) {
+            $book->cover_url = env('AWS_URL') . '/' . $imagePath;  // Atualiza a URL completa do S3
+        } else {
+            return back()->withErrors('Erro ao salvar a imagem no S3.');
+        }
     }
 
     // Salvar as alterações no banco de dados
     $book->save();
 
-    return redirect()->route('books.index')->with('success', 'Book updated successfully');
+    return redirect()->route('books.index')->with('success', 'Livro atualizado com sucesso!');
 }
+
 
 
     public function edit($id)
