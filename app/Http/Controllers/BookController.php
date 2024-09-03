@@ -8,6 +8,7 @@ use App\Http\Services\GoogleBooksService;
 use App\Http\Services\BrasilAPIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
@@ -161,17 +162,30 @@ private function getIsbn($identifiers)
     }
     return 'ISBN não disponível';
 }
-
-    public function download($id)
-    {
-        $book = Book::find($id);
-        if (!$book || !$book->file_url) {
-            return redirect()->route('books.index')->withErrors('File not found');
-        }
-        return response()->download(storage_path('app/' . $book->file_url));
+public function download($id)
+{
+    $book = Book::find($id);
+    if (!$book || !$book->file_url) {
+        return redirect()->route('books.index')->withErrors('File not found');
     }
 
-    public function store(Request $request)
+    // Verifique se o arquivo está armazenado no S3
+    if (strpos($book->file_url, 's3://') === 0) {
+        $fileUrl = str_replace('s3://', env('AWS_URL') . '/', $book->file_url);
+
+        // Redireciona para o URL do S3
+        return redirect()->away($fileUrl);
+    }
+
+    // Caso o arquivo esteja no armazenamento local
+    $filePath = storage_path('app/' . $book->file_url);
+    if (file_exists($filePath)) {
+        return response()->download($filePath);
+    }
+
+    return redirect()->route('books.index')->withErrors('File not found');
+}
+public function store(Request $request)
 {
     // Validação dos dados recebidos
     $validated = $request->validate([
@@ -184,22 +198,31 @@ private function getIsbn($identifiers)
         'file' => 'nullable|file|mimes:pdf|max:20480',
         'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'synopsis' => 'nullable|string',
-        'description' => 'nullable|string',
     ]);
 
     // Criação do novo livro
-    $book = Book::create($validated);
+    $book = Book::create([
+        'title' => $validated['title'],
+        'author_id' => $validated['author_id'],
+        'publisher' => $validated['publisher'],
+        'publication_year' => $validated['publication_year'],
+        'pages_amount' => $validated['pages_amount'],
+        'isbn_number' => $validated['isbn_number'],
+        'synopsis' => $validated['synopsis'],
+    ]);
 
     // Manipulação de arquivo PDF, se existir
     if ($request->hasFile('file')) {
-        $filePath = $request->file('file')->store('books');
-        $book->file_url = $filePath;
+        $filePath = $request->file('file')->store('gerenciador-de-livros', 's3', [
+            'visibility' => 'public'
+        ]);
+        $book->file_url = env('AWS_URL') . '/' . $filePath;  // Adiciona a URL completa do S3
     }
 
     // Manipulação de imagem, se existir
     if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store('images', 's3');
-        $book->image_name = $imagePath;
+        $imagePath = $request->file('image')->store('gerenciador-de-livros', 's3');
+      $book->image_url = env('AWS_URL') . '/' . $imagePath;  // Adiciona a URL completa do S3
     }
 
     // Salvar as alterações no banco de dados
@@ -208,7 +231,6 @@ private function getIsbn($identifiers)
     // Redirecionar para a lista de livros com mensagem de sucesso
     return redirect()->route('books.index')->with('success', 'Livro adicionado com sucesso!');
 }
-
        
 public function update(Request $request, $id)
 {
