@@ -10,19 +10,6 @@ class Author extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'street_address',
-        'city',
-        'state',
-        'country',
-        'picture_url'
+        'name', 'street_address', 'city', 'state', 'country', 'picture_url'
     ];
-
-    /**
-     * Relacionamento: Um autor pode ter muitos livros.
-     */
-    public function books()
-    {
-        return $this->hasMany(Book::class);
-    }
 }
