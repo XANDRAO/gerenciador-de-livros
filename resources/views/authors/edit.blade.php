@@ -40,9 +40,6 @@
             <div class="form-group">
                 <label for="picture_url">Foto</label>
                 <input type="file" name="picture_url" class="form-control">
-                @if ($author->picture_url)
-                    <img src="{{ asset('storage/' . $author->picture_url) }}" alt="{{ $author->name }}" class="img-fluid mt-2">
-                @endif
             </div>
 
             <button type="submit" class="btn btn-primary">Salvar Alterações</button>
