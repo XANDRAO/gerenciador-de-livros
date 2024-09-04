@@ -23,7 +23,7 @@ Este projeto é um gerenciador de livros desenvolvido como parte de um teste té
 
 
 
--   _Detalhes do Livro_: Os detalhes de cada livro incluem título, sinopse, quantidade de páginas, ISBN, autor, editora, capa do livro, e um link para download do PDF se o livro for cadastrado na plataforma (e não através do Google Books).
+-   _Detalhes do Livro_: Os detalhes de cada livro incluem título, sinopse, quantidade de páginas, ISBN, autor, editora, capa do livro ano de publicação, e um link para download do PDF se o livro for cadastrado na plataforma (e não através do Google Books).
 
 <img src="app/.github/images/detalherdolivro.png" />
 
@@ -54,6 +54,12 @@ Este projeto é um gerenciador de livros desenvolvido como parte de um teste té
 -   _Upload de Arquivos_: O AWS S3 é usado para armazenar as capas dos livros e os arquivos PDF. Os arquivos são carregados através do formulário de upload no sistema e são armazenados de forma segura no bucket do S3 configurado.
 -   _Acesso Público_: Após o upload, as capas dos livros e os arquivos PDF são disponibilizados via URLs públicas, facilitando a visualização e o download.
 
+
+### BrasilAPI Cep 
+
+- A API de CEP da BrasilAPI permite buscar informações detalhadas sobre endereços no Brasil a partir de um CEP informado. Ela consolida dados de múltiplas fontes, como Correios e ViaCEP, para fornecer informações confiáveis, como logradouro, bairro, cidade, estado, e complemento. A API é fácil de integrar, gratuita, e não possui limites de uso.
+
+
 ## Requisitos
 
 -   PHP 8.2+
@@ -62,6 +68,7 @@ Este projeto é um gerenciador de livros desenvolvido como parte de um teste té
 -   Banco de Dados MySQL
 -   Conta AWS S3
 -   Google Books API Key
+-   API do Cep BrasilAPI
 
 ## Instalação
 
