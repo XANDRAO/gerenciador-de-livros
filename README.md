@@ -15,7 +15,7 @@ Este projeto é um gerenciador de livros desenvolvido como parte de um teste té
 
 
 
--   _Pesquisa de Livros_: Permite a busca por livros através do nome do livro;
+-   _Pesquisa de Livros_: Permite a busca por livros através do nome do livro, e do ISBN do livro atraves de um Endpoint como especificado no e-mail do teste, se o livro não for encontrado, você recebe uma view dizendo que o livro não foi encontrado, e também da pra fazer a pesquisa pelo nome do Autor, quando o livro for pesquisado pelo nome do Autor aparece todos os livros que esse Autor escreveu;
 
 <img src="app/.github/images/resultados da pesquisa.png" />
 
@@ -37,7 +37,10 @@ Este projeto é um gerenciador de livros desenvolvido como parte de um teste té
 
 
 -   _Gerenciamento de Livros_: Usuários cadastrados podem criar, editar e excluir livros associados aos autores que eles criaram.
+-      
 <img src="app/.github/images/criarlivro.png" />
+
+
 -   _Upload de Arquivos_: Os usuários podem fazer upload de capas de livros e arquivos PDF para o AWS S3, que serão armazenados e acessíveis através de URLs públicas.
 
 ## Integrações
